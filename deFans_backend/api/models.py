@@ -63,7 +63,7 @@ class Account(models.Model):
 
 class CreatorPost(models.Model):
 
-    uploader = models.ForeignKey(Creator, on_delete=models.CASCADE, related_name='uploaded_posts')
+    uploader = models.ForeignKey(Creator, on_delete=models.CASCADE, related_name='posts')
     upload_date = models.DateTimeField(auto_now_add=True, blank=False)
     content = models.FileField(upload_to='posts_content/%Y/%m/%d/')
     caption = models.TextField(max_length=200, blank=True)

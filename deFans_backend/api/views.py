@@ -1,19 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-# from rest_framework.viewsets import ModelViewSet
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView
 
 from .models import Creator, Account, CreatorPost
-from .serializers import CreatorListSerializer, AccountListSerializer
-
-
-class Check(APIView):
-    renderer_classes = [JSONRenderer]
-
-    def get(self, request):
-        return Response({"hello":"world"})
+from .serializers import CreatorListSerializer, AccountListSerializer, CreatorPostListSerializer
     
 
 class CreatorView(ListAPIView):
@@ -50,7 +41,7 @@ class CreatorPostView(ListAPIView):
 
     renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny]
-    serializer_class = None
+    serializer_class = CreatorPostListSerializer
 
     def get_queryset(self):
         return CreatorPost.objects.all()
@@ -59,3 +50,37 @@ class CreatorPostView(ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class PostByCreatorView(ListAPIView):
+
+    renderer_classes = [JSONRenderer]
+    permission_classes = [AllowAny]
+    serializer_class = CreatorPostListSerializer
+
+    def get_queryset(self):
+        """
+        this gets the `user_id` in the URL
+        """
+        queryset = CreatorPost.objects.all()
+        user = self.kwargs['user_id']
+        if user is not None:
+            queryset = queryset.filter(uploader__id=user)
+        return queryset
+    
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class CreateCreatorView(CreateAPIView):
+    pass
+
+
+class CreateAccountView(CreateAPIView):
+    pass
+
+
+class CreatePostView(CreateAPIView):
+    pass
