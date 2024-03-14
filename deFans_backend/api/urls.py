@@ -1,10 +1,9 @@
-from django.urls import path, include
-from rest_framework import routers
+from django.urls import path
+from .views import Check, CreatorView, AccountView
 
-router = routers.DefaultRouter()
-urlpatterns = router.urls
 
-urlpatterns += [
-    path('', include(router.urls)),
-    # path('room', RoomView.as_view())
+urlpatterns = [
+    path('index/', Check.as_view()),
+    path('creators/', CreatorView.as_view()),
+    path('accounts/', AccountView.as_view()),
 ]
