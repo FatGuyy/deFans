@@ -2,9 +2,18 @@ from django.contrib import admin
 from .models import Creator, Account, CreatorPost
 
 # Register your models here.
-class AuthorAdmin(admin.ModelAdmin):
-    pass
+class CreatorAdmin(admin.ModelAdmin):
+    list_display = ["id", "nickName"]
+    search_fields = ["nickName"]
 
-admin.site.register(Creator, AuthorAdmin)
-admin.site.register(Account, AuthorAdmin)
-admin.site.register(CreatorPost, AuthorAdmin)
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ["id", "nickName"]
+    search_fields = ["nickName"]
+
+class CreatorPostAdmin(admin.ModelAdmin):
+    list_display = ["id", "uploader"]
+    search_fields = ["id", "uploader"]
+
+admin.site.register(Creator, CreatorAdmin)
+admin.site.register(Account, AccountAdmin)
+admin.site.register(CreatorPost, CreatorPostAdmin)

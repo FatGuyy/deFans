@@ -1,0 +1,37 @@
+POST http://127.0.0.1:8000/api/signup_creator/
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "Some_new_user",
+    "email": "some@gmail.com",
+    "password": "password123"
+  },
+  "nickName": "ExampleCreator",
+  "bio": "This is a sample bio for the creator.",
+  "price": 10.99,
+  "walletAddress": "0x123456789ABCDEF0123456789ABCDEF012345688"
+}
+
+# 1c897a88e4fcc79d1869f6a1a6ed80f3f8a80830
+### 
+
+POST http://127.0.0.1:8000/api/login_creator/
+content-type: application/json
+
+{
+  "username": "Some_new_user",
+  "password": "password123"
+}
+
+###
+
+# we send the token in header
+POST http://127.0.0.1:8000/api/login_creator/
+content-type: application/json
+Authorization: Token 1c897a88e4fcc79d1869f6a1a6ed80f3f8a80830
+
+{
+  "username": "Some_new_user",
+  "password": "password123"
+}
