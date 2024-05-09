@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Creator, Account, CreatorPost
+from .models import Creator, Account, CreatorPost, Subscription
 
 # Register your models here.
 class CreatorAdmin(admin.ModelAdmin):
@@ -17,3 +17,4 @@ class CreatorPostAdmin(admin.ModelAdmin):
 admin.site.register(Creator, CreatorAdmin)
 admin.site.register(Account, AccountAdmin)
 admin.site.register(CreatorPost, CreatorPostAdmin)
+admin.site.register(Subscription)

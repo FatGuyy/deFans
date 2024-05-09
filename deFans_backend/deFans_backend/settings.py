@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'api.apps.ApiConfig',
     'rest_framework.authtoken',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -129,6 +129,8 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rest_framework_json_api.exceptions.exception_handler',
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework_json_api.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.JSONParser'
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -147,6 +149,8 @@ REST_FRAMEWORK = {
         'rest_framework_json_api.renderers.JSONRenderer',
     ),
     'TEST_REQUEST_DEFAULT_FORMAT': 'vnd.api+json',
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication'],
+    'DEFAULT_PERMISSION_CLASSES' : ['rest_framework.permissions.IsAuthenticatedOrReadOnly']
 
 }

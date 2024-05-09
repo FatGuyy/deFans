@@ -1,36 +1,34 @@
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
-from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import ListAPIView, CreateAPIView
-from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import authentication_classes, permission_classes
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+# from rest_framework.decorators import authentication_classes, permission_classes
+# from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 
-from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import Group
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
-from .models import Creator, Account, CreatorPost
+from .models import Creator, Account, CreatorPost, Subscription
+from .utilis import createWallet
 from .serializers import (
     CreatorSerializerList, 
     AccountSerializer, 
     CreatorPostSerializer, 
     CreateCreatorSerializer, 
-    LoginCreatorSerializer,
+    LoginUserSerializer,
     CreateAccountSerializer,
-    UserSerializer
+    CreateCreatorPostSerializer,
+    AddSubscription
 )
 
 
 # get all the creators
 class CreatorView(ListAPIView):
 
-    renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny] # empty means anyone can access the class
     serializer_class = CreatorSerializerList
 
@@ -46,8 +44,6 @@ class CreatorView(ListAPIView):
 # get all the Accounts
 class AccountView(ListAPIView):
 
-    renderer_classes = [JSONRenderer]
-    # authentication_classes = []
     permission_classes = [AllowAny]
     serializer_class = AccountSerializer
 
@@ -59,10 +55,10 @@ class AccountView(ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+
 # get all the creators' Posts
 class CreatorPostView(ListAPIView):
 
-    renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny]
     serializer_class = CreatorPostSerializer
 
@@ -78,7 +74,6 @@ class CreatorPostView(ListAPIView):
 # Get all the Creator's Posts by user_id
 class PostByCreatorView(ListAPIView):
 
-    renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny]
     serializer_class = CreatorPostSerializer
 
@@ -104,18 +99,23 @@ class PostByCreatorView(ListAPIView):
 # Make a Creator
 class CreateCreatorView(CreateAPIView):
     
-    parser_classes = [MultiPartParser, JSONParser]
-    renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny]
 
     def post(self, request):
         creator = None
+        request.data["nickName"] = request.data['user']['username']
         serializer = CreateCreatorSerializer(data=request.data)
+        wallet, mnemonic = createWallet()
         if serializer.is_valid():
             user_data = serializer.validated_data.pop('user')
             user = User.objects.create_user(**user_data)
+            # Adding user in the Creator group
+            my_group = Group.objects.get(name='Creator') 
+            my_group.user_set.add(user)
+            # generating a token for the user
             token = Token.objects.create(user=user)
             try:
+                serializer.validated_data['walletAddress'] = wallet.address
                 with transaction.atomic():
                     creator = Creator.objects.create(user=user, **serializer.validated_data)
             except Exception as e:
@@ -123,51 +123,151 @@ class CreateCreatorView(CreateAPIView):
                 user.delete()
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({"token": token.key, "user": CreateAccountSerializer(creator).data}, status=status.HTTP_201_CREATED)
+                return Response({"token": token.key, "Creator": CreateCreatorSerializer(creator).data, "mnemonic": str(mnemonic)}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Make a User
+# Make a Account
 class CreateAccountView(CreateAPIView):
     
-    parser_classes = [MultiPartParser, JSONParser]
-    renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny]
 
     def post(self, request):
         account = None
+        request.data["nickName"] = request.data['user']['username']
         serializer = CreateAccountSerializer(data=request.data)
+        wallet, mnemonic = createWallet()
         if serializer.is_valid():
             user_data = serializer.validated_data.pop('user')
             user = User.objects.create_user(**user_data)
+            my_group = Group.objects.get(name='Account') 
+            my_group.user_set.add(user)
+            token = Token.objects.create(user=user)
             try:
+                serializer.validated_data['walletAddress'] = wallet.address
                 with transaction.atomic():
                     account = Account.objects.create(user=user, **serializer.validated_data)
+                    print("subscriptions - ", account.subscriptions)
+                    account.subscriptions.clear()
             except Exception as e:
                 print("exception occured - ", e)
                 user.delete()
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response(CreateAccountSerializer(account).data, status=status.HTTP_201_CREATED)
+                return Response({"token": token.key, "account": CreateAccountSerializer(account).data, "mnemonic": str(mnemonic)}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreatePostView(CreateAPIView):
-    pass
-
-# simple login view for a creator account
-class LoginCreatorView(APIView):
-
-    renderer_classes = [JSONRenderer]
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    parser_classes = [MultiPartParser, JSONParser]
+# Create a Creator Post
+class CreateCreatorPostView(CreateAPIView):
+    
+    serializer_class = CreateCreatorPostSerializer
     permission_classes = [IsAuthenticated]
-    serializer_class = LoginCreatorSerializer
 
     def post(self, request):
-        user = get_object_or_404(User, username=request.data['username'])
+        serializer = CreateCreatorPostSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    user=request.user
+                    uploader=Creator.objects.get(user=user)
+                    post = CreatorPost.objects.create(uploader=uploader, **serializer.validated_data)
+                    return Response({"post": CreateCreatorPostSerializer(post).data}, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# simple login view for a creator account
+class LoginCreatorView(ListAPIView):
+
+    permission_classes = [AllowAny]
+    serializer_class = LoginUserSerializer
+
+    def post(self, request):
+        user = get_object_or_404(User, email=request.data['email'])
         if not user.check_password(request.data['password']):
             return Response({"Error":"credentials do not match"}, status=status.HTTP_404_NOT_FOUND)
         token, _ = Token.objects.get_or_create(user=user)
-        serializer = UserSerializer(instance=user)
-        return Response({"token":token.key, "user": serializer.data, "header_user": str(request.user)}, status=status.HTTP_200_OK)
+        # serializer = UserSerializer(instance=user)
+        return Response({"token":token.key, "header_user": str(request.user)}, status=status.HTTP_200_OK)
+
+
+# View to Login Account
+class LoginAccount(ListAPIView):
+
+    permission_classes = [AllowAny]
+    serializer_class = LoginUserSerializer
+
+    def post(self, request):
+        user = get_object_or_404(User, email=request.data['email'])
+        if not user.check_password(request.data['password']):
+            return Response({"Error":"credentials do not match"}, status=status.HTTP_404_NOT_FOUND)
+        token, _ = Token.objects.get_or_create(user=user)
+        return Response({"token":token.key, "header_user": str(request.user)}, status=status.HTTP_200_OK)
+
+
+# View to Add a sub
+class AddSubscriptionView(CreateAPIView):
+    
+    permission_classes = [AllowAny]
+    serializer_class = AddSubscription
+
+    def post(self, request):
+        # getting ids from the username
+        creator_user = User.objects.get(username=request.data['creator'])
+        account_user = User.objects.get(username=request.data['account'])
+        creator = Creator.objects.get(user=creator_user)
+        account = Account.objects.get(user=account_user)
+        creator = creator.id
+        account = account.id
+
+        serializer = AddSubscription(data={"creator":creator, "account":account})
+        # Have to check if the Subscription already exists...
+        if serializer.is_valid():
+            subscription = serializer.save()  # Create the subscription
+            return Response({
+                "message": "Subscription created successfully",
+                "subscription": str(subscription)
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# View to get posts as per an account
+class HomeScreen(ListAPIView):
+
+    serializer_class = CreateCreatorPostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self, request):
+        user = request.user
+        account = Account.objects.get(user=user)
+
+        # This represents all the subscription the user has
+        subscription_list = Subscription.objects.filter(account=account).values_list('account', flat=True)
+        return list(subscription_list)
+
+    def get_posts_from_a_creator(self, id:int):
+        creator = None
+        user= User.objects.get(id=id)
+        try:
+            creator = Creator.objects.get(user=user)
+        except ObjectDoesNotExist:
+            return None
+        print(creator)
+        posts = CreatorPost.objects.filter(uploader=creator)
+        return posts
+
+    def post(self, request):
+        # this is returning some account type user - find out why?
+        query = self.get_queryset(request=request)
+        print("query - ", query)
+        if query is None:
+            return Response({"error":"No subsription"}, status=status.HTTP_403_FORBIDDEN)
+        posts = self.get_posts_from_a_creator(query[0])
+        print(posts)
+        return Response({"query":str(posts)}, status=status.HTTP_200_OK)
+
+
+# View to 

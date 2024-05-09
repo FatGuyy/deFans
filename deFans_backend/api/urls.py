@@ -6,8 +6,10 @@ from .views import (
     PostByCreatorView,
     CreateCreatorView,
     CreateAccountView,
-    CreatePostView,
-    LoginCreatorView
+    CreateCreatorPostView,
+    LoginCreatorView,
+    AddSubscriptionView,
+    HomeScreen
 )
 
 
@@ -18,6 +20,8 @@ urlpatterns = [
     path('posts/<int:user_id>/', PostByCreatorView.as_view(), name='user-posts'),
     path('signup_creator/', CreateCreatorView.as_view(), name='create-creator'),
     path('signup_account/', CreateAccountView.as_view(), name='create-Account'),
-    path('create_post/', CreatePostView.as_view(), name='create-Post'),
-    path('login_creator/', LoginCreatorView.as_view(), name='login-creator')
+    path('login_creator/', LoginCreatorView.as_view(), name='login-creator'),
+    path('create_post/', CreateCreatorPostView.as_view(), name='create-Post'),
+    path('add-subscription/', AddSubscriptionView.as_view(), name='add-subscription'),
+    path('home/', HomeScreen.as_view(), name='Home')
 ]

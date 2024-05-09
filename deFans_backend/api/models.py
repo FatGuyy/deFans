@@ -21,8 +21,8 @@ class Creator(models.Model):
         blank=True
     )
     subscribers = models.ManyToManyField(
-        'auth.User',
-        related_name='subscribers',
+        "Account",
+        related_name="subscribed_accounts",
         blank=True
     )
 
@@ -49,7 +49,7 @@ class Account(models.Model):
         validators=[RegexValidator(regex=r'^0x[a-fA-F0-9]{40}$')],
         blank=True
     )
-    subscriptions = models.ManyToManyField(Creator, related_name='subscriptions', blank=True)
+    subscriptions = models.ManyToManyField("Creator", related_name="subscribed_creators", blank=True)
 
     class Meta:
         verbose_name = ("Account")
@@ -62,6 +62,7 @@ class Account(models.Model):
         return reverse("Account_detail", kwargs={"pk": self.pk})
 
 
+# This model represents a post of a creator
 class CreatorPost(models.Model):
 
     uploader = models.ForeignKey(Creator, on_delete=models.CASCADE, related_name='posts')
@@ -81,3 +82,16 @@ class CreatorPost(models.Model):
 
     def is_picture(self):
         return self.content_type == self.ContentType.PICTURE
+
+
+class Subscription(models.Model):
+
+    creator = models.ForeignKey(Creator, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.account} subscribed to {self.creator}"
+
+    class Meta:
+        unique_together = ('account', 'creator')  # Prevent duplicate subscriptions

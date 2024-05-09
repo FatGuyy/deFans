@@ -3,35 +3,56 @@ Content-Type: application/json
 
 {
   "user": {
-    "username": "Some_new_user",
-    "email": "some@gmail.com",
+    "username": "girls",
+    "email": "best_girl@gmail.com",
     "password": "password123"
   },
-  "nickName": "ExampleCreator",
-  "bio": "This is a sample bio for the creator.",
-  "price": 10.99,
-  "walletAddress": "0x123456789ABCDEF0123456789ABCDEF012345688"
+  "bio": "This is a sample bio for some girl.",
+  "price": 69.99
 }
 
-# 1c897a88e4fcc79d1869f6a1a6ed80f3f8a80830
 ### 
 
-POST http://127.0.0.1:8000/api/login_creator/
-content-type: application/json
-
-{
-  "username": "Some_new_user",
-  "password": "password123"
-}
-
-###
-
+# 7349fb94b32ede946e6835eec762affdb2fb118e
 # we send the token in header
 POST http://127.0.0.1:8000/api/login_creator/
 content-type: application/json
-Authorization: Token 1c897a88e4fcc79d1869f6a1a6ed80f3f8a80830
+Authorization: Token 7349fb94b32ede946e6835eec762affdb2fb118e
 
 {
-  "username": "Some_new_user",
+  "username": "some_girl",
   "password": "password123"
+}
+
+### 
+POST http://127.0.0.1:8000/api/signup_account/
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "imbecile_3",
+    "email": "imbecile2@gmail.com",
+    "password": "password123"
+  },
+  "bio": "This is a sample bio for an imbecile."
+}
+
+###
+POST http://127.0.0.1:8000/api/create_post/
+content-type: application/json
+Authorization: Token 7a520452792e6429a8909faf62448f986529979f
+
+{
+  "content": "Some girl",
+  "caption": "This is a sample caption"
+}
+
+###
+POST http://127.0.0.1:8000/api/add-subscription/
+content-type: application/json
+Authorization: Token 8dd9834de8b8e4a6f25cee13a0efa93da72e9d25
+
+{
+  "creator": "best_girl",
+  "account": "imbecile_3"
 }
