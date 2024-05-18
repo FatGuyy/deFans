@@ -1,5 +1,6 @@
 # Web3 Subscription Platform
 
+We don't want to use any other wallet, we should handle all of that in backend. User only needs email/username and a password.
 This project is a subscription-based platform where users can subscribe to content creators. Iis a premium content type of service, where the payments are handled through Web3, leveraging blockchain technology for secure and transparent transactions.
 
 ## Table of Contents

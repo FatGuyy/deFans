@@ -56,7 +56,7 @@ class Account(models.Model):
         verbose_name_plural = ("Accounts")
 
     def __str__(self):
-        return str(self.id)
+        return str(self.nickName)
 
     def get_absolute_url(self):
         return reverse("Account_detail", kwargs={"pk": self.pk})

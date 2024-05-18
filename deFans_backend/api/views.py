@@ -245,19 +245,19 @@ class HomeScreen(ListAPIView):
         account = Account.objects.get(user=user)
 
         # This represents all the subscription the user has
-        subscription_list = Subscription.objects.filter(account=account).values_list('account', flat=True)
+        subscription_list = Subscription.objects.filter(account=account).values_list('creator', flat=True)
         return list(subscription_list)
 
-    def get_posts_from_a_creator(self, id:int):
+    def posts_from_a_creator(self, id:int):
         creator = None
-        user= User.objects.get(id=id)
+        # creator= Creator.objects.get(id=id)
         try:
-            creator = Creator.objects.get(user=user)
+            creator = Creator.objects.get(id=id)
         except ObjectDoesNotExist:
             return None
-        print(creator)
+        print("creator - ", creator)
         posts = CreatorPost.objects.filter(uploader=creator)
-        return posts
+        return list(set(posts))
 
     def post(self, request):
         # this is returning some account type user - find out why?
@@ -265,9 +265,15 @@ class HomeScreen(ListAPIView):
         print("query - ", query)
         if query is None:
             return Response({"error":"No subsription"}, status=status.HTTP_403_FORBIDDEN)
-        posts = self.get_posts_from_a_creator(query[0])
-        print(posts)
-        return Response({"query":str(posts)}, status=status.HTTP_200_OK)
+        
+        posts_list = []
+        for creator_id in query:
+            posts_list.append(self.posts_from_a_creator(creator_id))
+        for posts in posts_list:
+            for post in posts:
+                print(post.content)
+        print("posts list - ", posts_list)
+        return Response({"query":str(posts_list)}, status=status.HTTP_200_OK)
 
 
 # View to 
