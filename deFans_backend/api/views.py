@@ -244,13 +244,15 @@ class HomeScreen(ListAPIView):
         user = request.user
         account = Account.objects.get(user=user)
 
-        # This represents all the subscription the user has
+        # Get all the Creators, Account has subscribed to 
         subscription_list = Subscription.objects.filter(account=account).values_list('creator', flat=True)
         return list(subscription_list)
 
     def posts_from_a_creator(self, id:int):
+        '''
+        This function gets you all the posts of a Creator using user_id
+        '''
         creator = None
-        # creator= Creator.objects.get(id=id)
         try:
             creator = Creator.objects.get(id=id)
         except ObjectDoesNotExist:
@@ -260,7 +262,6 @@ class HomeScreen(ListAPIView):
         return list(set(posts))
 
     def post(self, request):
-        # this is returning some account type user - find out why?
         query = self.get_queryset(request=request)
         print("query - ", query)
         if query is None:
@@ -269,11 +270,9 @@ class HomeScreen(ListAPIView):
         posts_list = []
         for creator_id in query:
             posts_list.append(self.posts_from_a_creator(creator_id))
-        for posts in posts_list:
-            for post in posts:
-                print(post.content)
-        print("posts list - ", posts_list)
-        return Response({"query":str(posts_list)}, status=status.HTTP_200_OK)
+        sorted_posts_list = sorted( [post for posts in posts_list for post in posts], key=lambda post: post.get_id())
+        print("posts list - ", sorted_posts_list)
+        return Response({"query":str(sorted_posts_list)}, status=status.HTTP_200_OK)
 
 
 # View to 

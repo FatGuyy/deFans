@@ -77,6 +77,9 @@ class CreatorPost(models.Model):
     def __str__(self):
         return str(self.id)
     
+    def get_id(self):
+        return self.id
+    
     def is_video(self):
         return self.content_type == self.ContentType.VIDEO
 
