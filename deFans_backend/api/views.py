@@ -274,5 +274,3 @@ class HomeScreen(ListAPIView):
         print("posts list - ", sorted_posts_list)
         return Response({"query":str(sorted_posts_list)}, status=status.HTTP_200_OK)
 
-
-# View to 

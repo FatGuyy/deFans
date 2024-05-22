@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Creator, Account, CreatorPost, Subscription
 from django.contrib.auth.models import User
-from django.shortcuts import get_object_or_404
 
 # User serializer
 class UserSerializer(serializers.ModelSerializer):
@@ -69,25 +68,3 @@ class AddSubscription(serializers.ModelSerializer):
         model = Subscription
         fields = ["creator", "account"]
 
-    # def validate_creator_username(self, value):
-    #     try:
-    #         creator = Creator.objects.get(user__username=value)
-    #     except Creator.DoesNotExist:
-    #         raise serializers.ValidationError("Creator with this username does not exist.")
-    #     return creator
-
-    # def validate_account_username(self, value):
-    #     try:
-    #         account = Account.objects.get(user__username=value)
-    #     except Account.DoesNotExist:
-    #         raise serializers.ValidationError("Account with this username does not exist.")
-    #     return account
-
-    # def create(self, validated_data):
-    #     creator = validated_data['creator_username']
-    #     account = validated_data['account_username']
-    #     subscription, _ = Subscription.objects.get_or_create(
-    #         creator=creator,
-    #         account=account
-    #     )
-    #     return subscription

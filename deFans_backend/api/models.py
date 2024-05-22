@@ -8,6 +8,7 @@ from django.core.validators import RegexValidator
 class Creator(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # we dont need this nickName, just remove this after being done with chats
     nickName = models.CharField(max_length=30, unique=False)
     bio = models.TextField(blank=True)
     profilePhoto = models.ImageField(upload_to="Creator_Profile_photos", height_field=None, width_field=None, max_length=None, blank=True)
